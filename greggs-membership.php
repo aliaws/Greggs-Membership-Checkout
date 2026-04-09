@@ -44,6 +44,56 @@ add_action('template_redirect', function() {
     }
 });
 
+// Add "How Did You Hear About Us" dropdown to checkout
+add_action('woocommerce_after_order_notes', function($checkout) {
+    woocommerce_form_field('hear_about_us', array(
+        'type'     => 'select',
+        'label'    => 'How Did You Hear About Us?',
+        'required' => false,
+        'class'    => array('form-row-wide'),
+        'options'  => array(
+            ''                => 'Select an option...',
+            'google'          => 'Google Search',
+            'social_media'    => 'Social Media',
+            'friend_family'   => 'Friend or Family',
+            'facebook'        => 'Facebook',
+            'instagram'       => 'Instagram',
+            'tiktok'          => 'TikTok',
+            'youtube'         => 'YouTube',
+            'email'           => 'Email Newsletter',
+            'advertisement'   => 'Advertisement',
+            'other'           => 'Other',
+        ),
+    ), $checkout->get_value('hear_about_us'));
+});
+
+// Save the field value to order
+add_action('woocommerce_checkout_update_order_meta', function($order_id) {
+    if (!empty($_POST['hear_about_us'])) {
+        update_post_meta($order_id, '_hear_about_us', sanitize_text_field($_POST['hear_about_us']));
+    }
+});
+
+// Show field in admin order details
+add_action('woocommerce_admin_order_data_after_billing_address', function($order) {
+    $value = get_post_meta($order->get_id(), '_hear_about_us', true);
+    if ($value) {
+        $options = array(
+            'google'        => 'Google Search',
+            'social_media'  => 'Social Media',
+            'friend_family' => 'Friend or Family',
+            'facebook'      => 'Facebook',
+            'instagram'     => 'Instagram',
+            'tiktok'        => 'TikTok',
+            'youtube'       => 'YouTube',
+            'email'         => 'Email Newsletter',
+            'advertisement' => 'Advertisement',
+            'other'         => 'Other',
+        );
+        echo '<p><strong>How Did You Hear About Us:</strong> ' . esc_html($options[$value] ?? $value) . '</p>';
+    }
+});
+
 // Clear cart BEFORE add — only from pricing page
 add_filter('woocommerce_add_to_cart_validation', function($passed, $product_id) {
     if (greggs_is_membership_product($product_id) && greggs_is_pricing_page()) {
